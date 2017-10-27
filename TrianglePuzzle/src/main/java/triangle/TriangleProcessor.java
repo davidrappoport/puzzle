@@ -20,9 +20,14 @@ import java.util.Scanner;
  */
 public class TriangleProcessor {
 
+	private static final String INPUT_STREAM_COULD_NOT_BE_FOUND_FOR_FILE_NAME = "InputStream could not be found for file name: ";
+	private static final String FILE_HAS_NO_LINES = "File has no lines: ";
+	private static final String EMPTY_STRING = "";
+	private static final String EXPECTING_FILE_NAME_ARGUMENT = "Expecting file name argument";
+
 	public static void main(String[] args) throws IOException {
-		if (args.length == 0 || args[0] == null || args[0].trim() == "") {
-			throw new IllegalArgumentException("Expecting file name argument");
+		if (args.length == 0 || args[0] == null || args[0].trim() == EMPTY_STRING) {
+			throw new IllegalArgumentException(EXPECTING_FILE_NAME_ARGUMENT);
 		}
 
 		long result = new TriangleProcessor().processTriangleFile(args[0]);
@@ -65,9 +70,9 @@ public class TriangleProcessor {
 		LineNumberReader lnr = new LineNumberReader(new InputStreamReader(getStream(fileName)));
 		lnr.skip(Long.MAX_VALUE);// jumps to the end of file
 		lines = lnr.getLineNumber();
-
+		lnr.close();
 		if (lines == 0)
-			throw new IOException("File " + fileName + " is empty!");
+			throw new IOException(FILE_HAS_NO_LINES + fileName);
 
 		// Assumptions:
 		// 1: At least one line with a number
@@ -98,15 +103,13 @@ public class TriangleProcessor {
 		long[] previousLineValues = new long[lines];
 		long[] currentLineValues = new long[lines];
 
-		BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+		Scanner scanner = new Scanner(inputStream);
 		long value = 0;
 		// we know how many lines to expect, we know how many values to expect on each
 		// line
 		for (int i = 1; i <= lines; i++) {
-			String line = br.readLine();
-			Scanner sc = new Scanner(line);
 			for (int j = 0; j < i; j++) {
-				value = sc.nextLong();
+				value = scanner.nextLong();
 				// every value (except the value on the first line) has 1 or two 'parent'
 				// values. Add the larger value to the child value
 				if (i > 1) {
@@ -121,10 +124,10 @@ public class TriangleProcessor {
 					heaviestWeight = value;
 				currentLineValues[j] = value;
 			}
-			sc.close();
 			System.arraycopy(currentLineValues, 0, previousLineValues, 0, i);
+			scanner.nextLine();
 		}
-		br.close();
+		scanner.close();
 
 		return heaviestWeight;
 	}
@@ -133,7 +136,7 @@ public class TriangleProcessor {
 		ClassLoader classLoader = getClass().getClassLoader();
 		InputStream stream = classLoader.getResourceAsStream(fileName);
 		if (stream == null)
-			throw new IOException("InputStream for file name: " + fileName + " could not be found.");
+			throw new IOException(INPUT_STREAM_COULD_NOT_BE_FOUND_FOR_FILE_NAME + fileName);
 		return stream;
 	}
 
